@@ -1,6 +1,8 @@
 use std::collections::VecDeque;
+use crate::operand::Operand;
 
 use crate::Status;
+use crate::writer::Writer;
 
 
 pub struct MemoryAccessor {
@@ -30,7 +32,7 @@ impl MemoryAccessor {
         self.status = Status::Executing
     }
 
-    pub fn clock_once(&mut self) -> () {
+    pub fn clock_once(&mut self,  op1: &mut Operand, op2: &mut Operand, writer: &mut Writer) -> () {
         if self.index_current_device == -1 {
             self.choose_next_device();
         }
@@ -44,6 +46,16 @@ impl MemoryAccessor {
         if self.array_left_clock_devices[self.index_current_device as usize] <= 0 {
             self.choose_next_device();
         }
+
+        if self.index_current_device == -1 {
+            self.status = Status::Done;
+        }
+
+        op1.set_clocks(self.array_left_clock_devices[0]);
+        op2.set_clocks(self.array_left_clock_devices[1]);
+        writer.set_clocks(self.array_left_clock_devices[2]);
+
+
     }
 
     fn choose_next_device(&mut self) -> () {

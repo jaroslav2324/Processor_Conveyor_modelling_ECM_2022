@@ -61,12 +61,15 @@ fn main() {
 
     // load list of commands
     let mut vec_command_types: VecDeque<i8> = VecDeque::new();
-    let mut vec_op1_types: VecDeque<std::string::String> = VecDeque::new();
-    let mut vec_op2_types: VecDeque<std::string::String> = VecDeque::new();
+    let mut vec_op1_types: VecDeque<String> = VecDeque::new();
+    let mut vec_op2_types: VecDeque<String> = VecDeque::new();
+    let mut vec_writer_types: VecDeque<String>;
 
-    let reader = BufReader::new(File::open("C://Users//HP//CLionProjects//ecm_curs2//input.txt")
+    // read text from file
+    let reader = BufReader::new(File::open("/home/jaros/CLionProjects/Processor_Conveyor_modelling_ECM_2022/input.txt")
         .expect("Cannot open input.txt"));
 
+    // fill lists with command types and operand types
     let mut cnt = 0;
     for line in reader.lines() {
         cnt = 0;
@@ -78,10 +81,11 @@ fn main() {
         }
     }
 
-    let input_available: bool = true;
-    let command_type = 1;
-    let op2_type = "REG";
-    let op1_type = "REG";
+    vec_writer_types = vec_op2_types.clone();
+
+    let mut input_available: bool = true;
+
+        let mut clocks_counter = 0;
 
     // loop of clocks
     loop {
@@ -99,45 +103,92 @@ fn main() {
 
             // shift conveyor
 
-            // add which type would be next
-            writer.load_data(&second_command_amount_clocks);
-            accessor.add_device_to_queue(2, second_command_amount_clocks);
+            // if calculator passes value to writer
+            if calculator.is_done() {
 
-            // load calculator
-            match command_type {
-                1 => calculator.load_data(1),
-                2 => calculator.load_data(second_command_amount_clocks),
-                _ => panic!()
+                let write_object_type = vec_writer_types
+                                              .pop_front()
+                                              .unwrap();
+                let write_object_type = write_object_type.as_str();
+
+                let clocks = match write_object_type {
+                    "REG" => 1,
+                    "MEM" => memory_access_amount_clocks,
+                    _ => panic!("No such operand type!")
+                };
+
+                writer.load_data(&clocks.clone());
+                accessor.add_device_to_queue(2, clocks);
+            }
+
+            // if operand2(both 1 and 2 operands) passes value to calculator
+            if operand2.is_done(){
+
+                let command_type = vec_command_types.pop_front().unwrap();
+
+                // load calculator
+                let clocks = match command_type {
+                    1 => 1,
+                    2 => second_command_amount_clocks,
+                    _ => panic!()
+                };
+
+                calculator.load_data(clocks);
             }
 
             // load 2 operand
-            let amount_clocks = match op2_type {
-                "REG" => 1,
-                "MEM" => memory_access_amount_clocks,
-                _ => panic!()
-            };
-            operand2.load_data(amount_clocks);
-            accessor.add_device_to_queue(1, amount_clocks);
+            if operand1.is_done() {
+
+                let op2_type = vec_op2_types
+                    .pop_front()
+                    .unwrap();
+                let op2_type = op2_type.as_str();
+
+                let clocks = match op2_type {
+                    "REG" => 1,
+                    "MEM" => memory_access_amount_clocks,
+                    _ => panic!()
+                };
+                operand2.load_data(clocks.clone());
+                accessor.add_device_to_queue(1, clocks);
+            }
 
             // load 1 operand
-            let amount_clocks = match op1_type {
-                "REG" => 1,
-                "MEM" => memory_access_amount_clocks,
-                _ => panic!()
-            };
-            operand1.load_data(amount_clocks);
-            accessor.add_device_to_queue(0, amount_clocks);
+            if command_executor.is_done() {
 
+                let op1_type = vec_op1_types
+                    .pop_front()
+                    .unwrap();
+                let op1_type = op1_type.as_str();
+
+                let clocks = match op1_type {
+                    "REG" => 1,
+                    "MEM" => memory_access_amount_clocks,
+                    _ => panic!()
+                };
+                operand1.load_data(clocks.clone());
+                accessor.add_device_to_queue(0, clocks);
+            }
+
+            if vec_op1_types.len() <= 0{ input_available = false}
             // load command executor
             if input_available {
                 command_executor.load_data(1);
             }
-        }
+                    }
 
+
+        println!("{} {} {} {} {}", command_executor.get_clocks(), operand1.get_clocks(),
+                 operand2.get_clocks(), calculator.get_clocks(), writer.get_clocks());
 
         command_executor.clock_once();
-        accessor.clock_once();
-        writer.clock_once();
+        accessor.clock_once(&mut operand1, &mut operand2, &mut writer);
+        calculator.clock_once();
+        clocks_counter += 1;
+
+        println!("{}", clocks_counter);
+        println!("{} {} {} {} {}", command_executor.get_status(), operand1.get_status(),
+                 operand2.get_status(), calculator.get_status(), writer.get_status());
     }
 
 

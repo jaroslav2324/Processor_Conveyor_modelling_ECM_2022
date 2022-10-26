@@ -56,6 +56,10 @@ impl CommandExecutor {
     pub fn clock_once(&mut self) -> (){
 
         if self.left_clocks > 0{ self.left_clocks -= 1; }
-        else { self.status = Status::Done }
+        if self.left_clocks <= 0 && self.status == Status::Executing { self.status = Status::Done }
+    }
+
+    pub fn get_clocks(&self) -> u8{
+        return self.left_clocks;
     }
 }

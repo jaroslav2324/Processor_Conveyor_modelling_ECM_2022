@@ -56,7 +56,19 @@ impl Writer {
     pub fn clock_once(&mut self) -> (){
 
         if self.left_clocks > 0{ self.left_clocks -= 1; }
-        else { self.status = Status::Done }
+        if self.left_clocks <= 0 && self.status == Status::Executing { self.status = Status::Done }
+
+    }
+
+    pub fn set_clocks(&mut self, clocks: u8) -> (){
+        self.left_clocks = clocks;
+        if self.left_clocks <= 0 && self.status == Status::Executing {
+            self.status = Status::Done;
+        }
+    }
+
+    pub fn get_clocks(&self) -> u8{
+        return self.left_clocks;
     }
 
 }
