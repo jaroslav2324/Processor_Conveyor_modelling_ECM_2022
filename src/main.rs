@@ -94,7 +94,12 @@ fn main() {
         // 5 statuses: readCmd, readOp1, readOp2, Calc, Writer.
         // if all statuses "Done" and no more input => break
         if  is_time_to_shift_conveyor(&command_executor,
-                                      &calculator, &accessor) && !input_available{
+                                      &calculator, &accessor)
+            && !input_available
+            && vec_op1_types.is_empty()
+            && vec_op2_types.is_empty()
+            && vec_command_types.is_empty()
+            && vec_writer_types.is_empty(){
             break;
         }
         // if all statuses "Done" => shift conveyor belt
@@ -104,7 +109,7 @@ fn main() {
             // shift conveyor
 
             // if calculator passes value to writer
-            if calculator.is_done() {
+            if calculator.is_done() && !vec_writer_types.is_empty(){
 
                 let write_object_type = vec_writer_types
                                               .pop_front()
@@ -122,7 +127,7 @@ fn main() {
             }
 
             // if operand2(both 1 and 2 operands) passes value to calculator
-            if operand2.is_done(){
+            if operand2.is_done() && !vec_command_types.is_empty(){
 
                 let command_type = vec_command_types.pop_front().unwrap();
 
@@ -137,7 +142,7 @@ fn main() {
             }
 
             // load 2 operand
-            if operand1.is_done() {
+            if operand1.is_done() && !vec_op2_types.is_empty(){
 
                 let op2_type = vec_op2_types
                     .pop_front()
@@ -154,7 +159,7 @@ fn main() {
             }
 
             // load 1 operand
-            if command_executor.is_done() {
+            if command_executor.is_done() && !vec_op1_types.is_empty(){
 
                 let op1_type = vec_op1_types
                     .pop_front()
@@ -190,6 +195,5 @@ fn main() {
         println!("{} {} {} {} {}", command_executor.get_status(), operand1.get_status(),
                  operand2.get_status(), calculator.get_status(), writer.get_status());
     }
-
 
 }
