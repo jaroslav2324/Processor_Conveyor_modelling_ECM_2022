@@ -15,16 +15,6 @@ impl Calculator {
         }
     }
 
-    pub fn is_clocks_zero(&self) -> bool{
-        if self.left_clocks == 0{
-           return true;
-        }
-        if self.left_clocks > 0{
-            return  false;
-        }
-        panic!("Clocks in calculator are below zero!");
-
-    }
 
     pub fn get_status(&self) -> Status{
         return match self.status {
