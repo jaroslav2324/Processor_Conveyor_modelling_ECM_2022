@@ -1,5 +1,4 @@
 use std::collections::VecDeque;
-use rand::Rng;
 
 use std::io::{BufRead, BufReader};
 use std::fs::File;
@@ -11,6 +10,7 @@ mod writer;
 mod calculator;
 mod command_executor;
 mod status;
+mod file_generator;
 
 use memory_accessor::MemoryAccessor;
 use operand::Operand;
@@ -18,6 +18,7 @@ use writer::Writer;
 use calculator::Calculator;
 use status::Status;
 use crate::command_executor::CommandExecutor;
+use crate::file_generator::generate_file;
 
 /*checks all statuses of processor parts and if they are Done return true*/
 fn is_time_to_shift_conveyor(cmd_exec: &CommandExecutor,
@@ -39,13 +40,16 @@ fn main() {
 
     // enter parameters
 
-    let p_register_adresation = 0.9;
+    let p_register_adresation = 0.6;
+    let p_command_first_type = 0.5;
 
-    let memory_access_amount_clocks = 2;
+    generate_file("/home/jaros/CLionProjects/Processor_Conveyor_modelling_ECM_2022/input.txt",
+    25,
+    p_register_adresation,
+    p_command_first_type);
 
-    let second_command_amount_clocks = 4;
-
-    let p_command_first_type = 0.9;
+    let memory_access_amount_clocks = 10;
+    let second_command_amount_clocks = 16;
 
     // generate list of entering commands
 
@@ -70,7 +74,7 @@ fn main() {
         .expect("Cannot open input.txt"));
 
     // fill lists with command types and operand types
-    let mut cnt = 0;
+    let mut cnt;
     for line in reader.lines() {
         cnt = 0;
         for word in line.unwrap().split_whitespace() {
