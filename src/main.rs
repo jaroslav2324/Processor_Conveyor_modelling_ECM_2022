@@ -40,16 +40,18 @@ fn main() {
 
     // enter parameters
 
+    let amount_commands = 1000;
+
     let p_register_adresation = 0.6;
     let p_command_first_type = 0.5;
 
     generate_file("/home/jaros/CLionProjects/Processor_Conveyor_modelling_ECM_2022/input.txt",
-    25,
+    amount_commands,
     p_register_adresation,
     p_command_first_type);
 
-    let memory_access_amount_clocks = 10;
-    let second_command_amount_clocks = 16;
+    let memory_access_amount_clocks: u8 = 2;
+    let second_command_amount_clocks: u8 = 4;
 
     // generate list of entering commands
 
@@ -64,7 +66,7 @@ fn main() {
     let mut calculator = Calculator::new();
 
     // load list of commands
-    let mut vec_command_types: VecDeque<i8> = VecDeque::new();
+    let mut vec_command_types: VecDeque<u8> = VecDeque::new();
     let mut vec_op1_types: VecDeque<String> = VecDeque::new();
     let mut vec_op2_types: VecDeque<String> = VecDeque::new();
     let mut vec_writer_types: VecDeque<String>;
@@ -78,7 +80,7 @@ fn main() {
     for line in reader.lines() {
         cnt = 0;
         for word in line.unwrap().split_whitespace() {
-            if cnt == 0 { vec_command_types.push_back(word.to_string().parse::<i8>().unwrap())}
+            if cnt == 0 { vec_command_types.push_back(word.to_string().parse::<u8>().unwrap())}
             else if cnt == 1 { vec_op1_types.push_back(word.to_string())}
             else if cnt == 2 { vec_op2_types.push_back(word.to_string())}
             cnt += 1;
@@ -87,9 +89,49 @@ fn main() {
 
     vec_writer_types = vec_op2_types.clone();
 
+    // calculate amount of clocks if it was sequential processing of commands
+    let mut seq_proc_clocks: i32 = 0;
+
+    // clocks for decoding command
+    for _elm in &vec_command_types{
+        seq_proc_clocks += 1;
+    }
+    // clocks for accessing first operand
+    for _elm in &vec_op1_types{
+        match _elm.as_str() {
+            "REG" => seq_proc_clocks += 1,
+            "MEM" => seq_proc_clocks += memory_access_amount_clocks as i32,
+            _ => panic!("No such memory type: {}", _elm)
+        }
+    }
+    // clocks for accessing second operand
+    for _elm in &vec_op2_types{
+        match _elm.as_str() {
+            "REG" => seq_proc_clocks += 1,
+            "MEM" => seq_proc_clocks += memory_access_amount_clocks as i32,
+            _ => panic!("No such memory type: {}", _elm)
+        }
+    }
+    // clocks for command executing
+    for _elm in &vec_command_types{
+        match _elm {
+            1 => seq_proc_clocks += 1,
+            2 => seq_proc_clocks += second_command_amount_clocks as i32,
+            _ => panic!("No such command type: {}", _elm)
+        }
+    }
+    // clocks for writing result using the address of the second operand
+    for _elm in &vec_writer_types{
+        match _elm.as_str() {
+            "REG" => seq_proc_clocks += 1,
+            "MEM" => seq_proc_clocks += memory_access_amount_clocks as i32,
+            _ => panic!("No such memory type: {}", _elm)
+        }
+    }
+
     let mut input_available: bool = true;
 
-        let mut clocks_counter = 0;
+    let mut clocks_counter = 0;
 
     // loop of clocks
     loop {
@@ -120,7 +162,7 @@ fn main() {
                                               .unwrap();
                 let write_object_type = write_object_type.as_str();
 
-                let clocks = match write_object_type {
+                let clocks: u8 = match write_object_type {
                     "REG" => 1,
                     "MEM" => memory_access_amount_clocks,
                     _ => panic!("No such operand type!")
@@ -153,7 +195,7 @@ fn main() {
                     .unwrap();
                 let op2_type = op2_type.as_str();
 
-                let clocks = match op2_type {
+                let clocks: u8 = match op2_type {
                     "REG" => 1,
                     "MEM" => memory_access_amount_clocks,
                     _ => panic!()
@@ -170,7 +212,7 @@ fn main() {
                     .unwrap();
                 let op1_type = op1_type.as_str();
 
-                let clocks = match op1_type {
+                let clocks: u8 = match op1_type {
                     "REG" => 1,
                     "MEM" => memory_access_amount_clocks,
                     _ => panic!()
@@ -187,7 +229,7 @@ fn main() {
                     }
 
 
-        println!("{} {} {} {} {}", command_executor.get_clocks(), operand1.get_clocks(),
+        println!("Clocks left:                             {} {} {} {} {}", command_executor.get_clocks(), operand1.get_clocks(),
                  operand2.get_clocks(), calculator.get_clocks(), writer.get_clocks());
 
         command_executor.clock_once();
@@ -195,9 +237,16 @@ fn main() {
         calculator.clock_once();
         clocks_counter += 1;
 
-        println!("{}", clocks_counter);
-        println!("{} {} {} {} {}", command_executor.get_status(), operand1.get_status(),
+        println!("Serial number of clock:                  {}", clocks_counter);
+        println!("Status of conveyor stages after clock:   {} {} {} {} {}", command_executor.get_status(), operand1.get_status(),
                  operand2.get_status(), calculator.get_status(), writer.get_status());
     }
 
+    println!("\nClocks end in {}", clocks_counter);
+    let average_clocks: f64 =  (clocks_counter as f64) / (amount_commands as f64);
+    println!("Average command execution time: {} clocks", average_clocks);
+    let seq_proc_average_clocks: f64 = (seq_proc_clocks as f64) / (amount_commands as f64);
+    println!("Average command execution time using sequential processing: {} clocks", seq_proc_average_clocks);
 }
+
+
