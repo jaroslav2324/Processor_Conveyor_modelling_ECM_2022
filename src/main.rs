@@ -42,13 +42,13 @@ fn main() {
 
     let amount_commands = 1000;
 
-    let p_register_adresation = 0.6;
+    let p_register_addressing = 0.6;
     let p_command_first_type = 0.5;
 
     generate_file("/home/jaros/CLionProjects/Processor_Conveyor_modelling_ECM_2022/input.txt",
-    amount_commands,
-    p_register_adresation,
-    p_command_first_type);
+                  amount_commands,
+                  p_register_addressing,
+                  p_command_first_type);
 
     let memory_access_amount_clocks: u8 = 2;
     let second_command_amount_clocks: u8 = 4;
