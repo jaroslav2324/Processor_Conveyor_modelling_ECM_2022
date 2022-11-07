@@ -1,5 +1,6 @@
 use std::collections::VecDeque;
 
+use std::io;
 use std::io::{BufRead, BufReader};
 use std::fs::File;
 
@@ -37,21 +38,67 @@ fn is_time_to_shift_conveyor(cmd_exec: &CommandExecutor,
 
 fn main() {
 
+    let amount_commands = 50;
 
     // enter parameters
 
-    let amount_commands = 1000;
+    let p_register_addressing: f64;
+    let p_command_first_type: f64;
+    let memory_access_amount_clocks: u8;
+    let second_command_amount_clocks: u8;
 
-    let p_register_addressing = 0.6;
-    let p_command_first_type = 0.5;
+    println!("Enter probability of addressing to a register: 0.9 / 0.8 / 0.6");
+    loop {
+        let mut enter_value = String::new();
+        io::stdin().read_line(&mut enter_value).expect("failed to read line");
+        match enter_value.as_str(){
+            "0.9\n" => {p_register_addressing = 0.9; break;}
+            "0.8\n" => {p_register_addressing = 0.8; break;}
+            "0.6\n" => {p_register_addressing = 0.6; break;}
+            _ => {println!("Wrong value! Try once again."); continue;}
+        }
+    }
+
+    println!("Enter probability of first type command: 0.9 / 0.7 / 0.5");
+    loop {
+        let mut enter_value = String::new();
+        io::stdin().read_line(&mut enter_value).expect("failed to read line");
+        match enter_value.as_str(){
+            "0.9\n" => { p_command_first_type= 0.9; break;}
+            "0.7\n" => { p_command_first_type= 0.7; break;}
+            "0.5\n" => { p_command_first_type= 0.5; break;}
+            _ => {println!("Wrong value! Try once again."); continue;}
+        }
+    }
+
+    println!("Enter amount clocks to access memory: 2 / 5 / 10");
+    loop {
+        let mut enter_value = String::new();
+        io::stdin().read_line(&mut enter_value).expect("failed to read line");
+        match enter_value.as_str(){
+            "2\n" => { memory_access_amount_clocks = 2; break;}
+            "5\n" => { memory_access_amount_clocks = 5; break;}
+            "10\n" => { memory_access_amount_clocks = 10; break;}
+            _ => {println!("Wrong value! Try once again."); continue;}
+        }
+    }
+
+    println!("Enter amount clocks is needed to calculate second command: 4 / 8 / 16");
+    loop {
+        let mut enter_value = String::new();
+        io::stdin().read_line(&mut enter_value).expect("failed to read line");
+        match enter_value.as_str(){
+            "4\n" => { second_command_amount_clocks = 4; break;}
+            "8\n" => { second_command_amount_clocks = 8; break;}
+            "16\n" => { second_command_amount_clocks = 16; break;}
+            _ => {println!("Wrong value! Try once again."); continue;}
+        }
+    }
 
     generate_file("/home/jaros/CLionProjects/Processor_Conveyor_modelling_ECM_2022/input.txt",
                   amount_commands,
                   p_register_addressing,
                   p_command_first_type);
-
-    let memory_access_amount_clocks: u8 = 2;
-    let second_command_amount_clocks: u8 = 4;
 
     // generate list of entering commands
 
